@@ -1,4 +1,4 @@
-import { SudokuGrid, Position } from '@/types/sudoku';
+import { SudokuGrid, SudokuGridWithPencils, SudokuCellWithPencils, Position } from '@/types/sudoku';
 
 // Create an empty 9x9 grid
 export function createEmptyGrid(): SudokuGrid {
@@ -165,4 +165,59 @@ export function generateSudokuPuzzle(): SudokuGrid {
 // Deep copy a grid
 export function copyGrid(grid: SudokuGrid): SudokuGrid {
   return grid.map(row => [...row]);
+}
+
+// Create an empty grid with pencil marks
+export function createEmptyGridWithPencils(): SudokuGridWithPencils {
+  return Array(9).fill(null).map(() => 
+    Array(9).fill(null).map(() => ({
+      value: null,
+      pencils: new Set<number>()
+    }))
+  );
+}
+
+// Convert regular grid to grid with pencils
+export function convertToGridWithPencils(grid: SudokuGrid): SudokuGridWithPencils {
+  return grid.map(row => 
+    row.map(cell => ({
+      value: cell,
+      pencils: new Set<number>()
+    }))
+  );
+}
+
+// Convert grid with pencils back to regular grid
+export function convertToRegularGrid(grid: SudokuGridWithPencils): SudokuGrid {
+  return grid.map(row => row.map(cell => cell.value));
+}
+
+// Toggle pencil mark in a cell
+export function togglePencilMark(cell: SudokuCellWithPencils, number: number): SudokuCellWithPencils {
+  const newPencils = new Set(cell.pencils);
+  if (newPencils.has(number)) {
+    newPencils.delete(number);
+  } else {
+    newPencils.add(number);
+  }
+  return {
+    ...cell,
+    pencils: newPencils
+  };
+}
+
+// Set all pencil marks (1-9) in a cell
+export function setAllPencilMarks(cell: SudokuCellWithPencils): SudokuCellWithPencils {
+  return {
+    ...cell,
+    pencils: new Set([1, 2, 3, 4, 5, 6, 7, 8, 9])
+  };
+}
+
+// Clear all pencil marks in a cell
+export function clearPencilMarks(cell: SudokuCellWithPencils): SudokuCellWithPencils {
+  return {
+    ...cell,
+    pencils: new Set()
+  };
 }

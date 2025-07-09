@@ -1,14 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { SudokuGrid as SudokuGridType } from '@/types/sudoku';
-import { createEmptyGrid, generateSudokuPuzzle } from '@/lib/sudokuUtils';
+import { SudokuGridWithPencils } from '@/types/sudoku';
+import { 
+  createEmptyGridWithPencils, 
+  generateSudokuPuzzle, 
+  convertToGridWithPencils,
+  setAllPencilMarks
+} from '@/lib/sudokuUtils';
 import SudokuGrid from './SudokuGrid';
 import GenerateButton from './GenerateButton';
 
 export default function SudokuGenerator() {
-  const [grid, setGrid] = useState<SudokuGridType>(createEmptyGrid);
+  const [grid, setGrid] = useState<SudokuGridWithPencils>(createEmptyGridWithPencils);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPencilMode, setIsPencilMode] = useState(false);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -18,14 +24,43 @@ export default function SudokuGenerator() {
     
     try {
       const newPuzzle = generateSudokuPuzzle();
-      setGrid(newPuzzle);
+      const gridWithPencils = convertToGridWithPencils(newPuzzle);
+      setGrid(gridWithPencils);
     } catch (error) {
       console.error('Error generating puzzle:', error);
       // Fallback to empty grid if generation fails
-      setGrid(createEmptyGrid());
+      setGrid(createEmptyGridWithPencils());
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleCellClick = (row: number, col: number) => {
+    if (!isPencilMode) return;
+    
+    const cell = grid[row][col];
+    if (cell.value !== null) return; // Can't add pencil marks to filled cells
+    
+    setGrid(prevGrid => {
+      const newGrid = prevGrid.map(gridRow => [...gridRow]);
+      
+      // If cell has no pencil marks, set all pencil marks (1-9)
+      // If cell has pencil marks, clear them
+      if (cell.pencils.size === 0) {
+        newGrid[row][col] = setAllPencilMarks(cell);
+      } else {
+        newGrid[row][col] = {
+          ...cell,
+          pencils: new Set()
+        };
+      }
+      
+      return newGrid;
+    });
+  };
+
+  const togglePencilMode = () => {
+    setIsPencilMode(!isPencilMode);
   };
 
   return (
@@ -39,15 +74,38 @@ export default function SudokuGenerator() {
         </p>
       </div>
       
-      <SudokuGrid grid={grid} />
+      <div className="flex gap-4 items-center">
+        <GenerateButton onGenerate={handleGenerate} isGenerating={isGenerating} />
+        <button
+          onClick={togglePencilMode}
+          className={`
+            px-4 py-2 rounded-lg font-medium transition-colors
+            ${isPencilMode 
+              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'
+            }
+          `}
+        >
+          {isPencilMode ? 'Exit Pencil Mode' : 'Pencil Mode'}
+        </button>
+      </div>
       
-      <GenerateButton onGenerate={handleGenerate} isGenerating={isGenerating} />
+      <SudokuGrid 
+        grid={grid} 
+        isPencilMode={isPencilMode}
+        onCellClick={handleCellClick}
+      />
       
       <div className="text-center text-sm text-gray-500 dark:text-gray-400 max-w-md">
         <p>
           Each generated puzzle has a unique solution and follows standard sudoku rules:
           each row, column, and 3×3 box must contain all digits from 1 to 9.
         </p>
+        {isPencilMode && (
+          <p className="mt-2 text-blue-600 dark:text-blue-400">
+            In pencil mode, click empty cells to toggle pencil marks (1-9).
+          </p>
+        )}
       </div>
     </div>
   );
