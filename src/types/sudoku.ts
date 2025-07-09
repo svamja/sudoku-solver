@@ -3,6 +3,8 @@ export type PencilMarks = Set<number>;
 export type SudokuCellWithPencils = {
   value: SudokuCell;
   pencils: PencilMarks;
+  answer: SudokuCell;
+  showAnswer: boolean;
 };
 export type SudokuGrid = SudokuCell[][];
 export type SudokuGridWithPencils = SudokuCellWithPencils[][];

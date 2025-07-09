@@ -172,7 +172,9 @@ export function createEmptyGridWithPencils(): SudokuGridWithPencils {
   return Array(9).fill(null).map(() => 
     Array(9).fill(null).map(() => ({
       value: null,
-      pencils: new Set<number>()
+      pencils: new Set<number>(),
+      answer: null,
+      showAnswer: false
     }))
   );
 }
@@ -182,7 +184,9 @@ export function convertToGridWithPencils(grid: SudokuGrid): SudokuGridWithPencil
   return grid.map(row => 
     row.map(cell => ({
       value: cell,
-      pencils: new Set<number>()
+      pencils: new Set<number>(),
+      answer: null,
+      showAnswer: false
     }))
   );
 }
@@ -219,5 +223,25 @@ export function clearPencilMarks(cell: SudokuCellWithPencils): SudokuCellWithPen
   return {
     ...cell,
     pencils: new Set()
+  };
+}
+
+// Convert regular grid to grid with pencils and answers
+export function convertToGridWithPencilsAndAnswers(puzzle: SudokuGrid, solution: SudokuGrid): SudokuGridWithPencils {
+  return puzzle.map((row, rowIndex) => 
+    row.map((cell, colIndex) => ({
+      value: cell,
+      pencils: new Set<number>(),
+      answer: solution[rowIndex][colIndex],
+      showAnswer: false
+    }))
+  );
+}
+
+// Toggle answer display for a cell
+export function toggleAnswerDisplay(cell: SudokuCellWithPencils): SudokuCellWithPencils {
+  return {
+    ...cell,
+    showAnswer: !cell.showAnswer
   };
 }

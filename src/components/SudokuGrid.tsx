@@ -34,6 +34,9 @@ export default function SudokuGrid({ grid, isPencilMode, onCellClick }: SudokuGr
         {cell.value ? (
           // Show the actual number if cell has a value
           <span className="font-bold text-lg">{cell.value}</span>
+        ) : cell.showAnswer && cell.answer ? (
+          // Show answer in green if showAnswer is true
+          <span className="font-bold text-lg text-green-600 dark:text-green-400">{cell.answer}</span>
         ) : cell.pencils.size > 0 ? (
           // Show pencil marks if cell is empty but has pencil marks
           <div className="grid grid-cols-3 gap-0 w-full h-full text-xs text-gray-500 dark:text-gray-400">

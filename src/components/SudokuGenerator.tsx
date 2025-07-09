@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { SudokuGridWithPencils } from '@/types/sudoku';
 import { 
   createEmptyGridWithPencils, 
-  generateSudokuPuzzle, 
-  convertToGridWithPencils,
-  setAllPencilMarks
+  generateCompleteSudoku,
+  createPuzzle,
+  convertToGridWithPencilsAndAnswers
 } from '@/lib/sudokuUtils';
 import SudokuGrid from './SudokuGrid';
 import GenerateButton from './GenerateButton';
@@ -23,8 +23,12 @@ export default function SudokuGenerator() {
     await new Promise(resolve => setTimeout(resolve, 100));
     
     try {
-      const newPuzzle = generateSudokuPuzzle();
-      const gridWithPencils = convertToGridWithPencils(newPuzzle);
+      // Generate complete solution first
+      const completeSolution = generateCompleteSudoku();
+      // Create puzzle by removing cells
+      const puzzle = createPuzzle(completeSolution);
+      // Convert to grid with pencils and answers
+      const gridWithPencils = convertToGridWithPencilsAndAnswers(puzzle, completeSolution);
       setGrid(gridWithPencils);
     } catch (error) {
       console.error('Error generating puzzle:', error);
@@ -44,16 +48,13 @@ export default function SudokuGenerator() {
     setGrid(prevGrid => {
       const newGrid = prevGrid.map(gridRow => [...gridRow]);
       
-      // If cell has no pencil marks, set all pencil marks (1-9)
-      // If cell has pencil marks, clear them
-      if (cell.pencils.size === 0) {
-        newGrid[row][col] = setAllPencilMarks(cell);
-      } else {
-        newGrid[row][col] = {
-          ...cell,
-          pencils: new Set()
-        };
-      }
+      // Show answer "7" when cell is clicked in pencil mode
+      newGrid[row][col] = {
+        ...cell,
+        answer: 7,
+        showAnswer: true,
+        pencils: new Set() // Clear pencil marks when showing answer
+      };
       
       return newGrid;
     });
