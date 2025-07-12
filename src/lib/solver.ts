@@ -1,7 +1,19 @@
 import { SudokuGridWithPencils } from '@/types/sudoku';
 
 
-export function stepSolve(prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
+export function stepSolve(stepCount: number, prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
+  if (stepCount == 1) {
+    // mark everything with pencil marks
+    return markAllCellsWithPencils(prevGrid);
+  }
+  if (stepCount == 2) {
+    // remove pencil marks from all cells
+    return convertSinglesToAnswers(prevGrid);
+  }
+  return prevGrid;
+}
+
+function markAllCellsWithPencils(prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
   const newGrid = prevGrid.map(gridRow => [...gridRow]);
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
@@ -51,3 +63,23 @@ const getBoxNumbers = (grid: SudokuGridWithPencils, row: number, col: number) =>
 
   return numbers;
 };
+
+const convertSinglesToAnswers = (prevGrid: SudokuGridWithPencils): SudokuGridWithPencils => {
+  const newGrid = prevGrid.map(gridRow => [...gridRow]);
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      const cell = newGrid[row][col];
+      if (cell.value !== null) continue; // Skip filled cells
+      if (cell.pencils.size === 1) {
+        const answer = Array.from(cell.pencils)[0];
+        newGrid[row][col] = {
+          ...cell,
+          answer: answer,
+          pencils: new Set(),
+          showAnswer: true
+        };
+      }
+    }
+  }
+  return newGrid;
+}

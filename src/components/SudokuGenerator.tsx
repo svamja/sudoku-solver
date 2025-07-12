@@ -16,10 +16,11 @@ export default function SudokuGenerator() {
   const [grid, setGrid] = useState<SudokuGridWithPencils>(createEmptyGridWithPencils);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPencilMode, setIsPencilMode] = useState(false);
+  const [stepCount, setStepCount] = useState(1);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
-    
+    setStepCount(1);
     // Add a small delay to show the loading state
     await new Promise(resolve => setTimeout(resolve, 100));
     
@@ -67,7 +68,11 @@ export default function SudokuGenerator() {
 
 
   const solveSudokuStepwise = async () => {
-    setGrid(stepSolve);
+    setGrid(prevGrid => {
+      const newGrid = stepSolve(stepCount, prevGrid);
+      return newGrid;
+    });
+    setStepCount(prevCount => prevCount + 1);
   };
 
   return (
@@ -107,6 +112,7 @@ export default function SudokuGenerator() {
         >
           {isPencilMode ? 'Exit Pencil Mode' : 'Pencil Mode'}
         </button>
+        <div>{stepCount} </div>
       </div>
       
       <SudokuGrid 
