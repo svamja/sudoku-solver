@@ -10,6 +10,9 @@ export function stepSolve(stepCount: number, prevGrid: SudokuGridWithPencils): S
     // remove pencil marks from all cells
     return convertSinglesToAnswers(prevGrid);
   }
+  if (stepCount == 3) {
+    return markAllCellsWithPencils(prevGrid);
+  }
   return prevGrid;
 }
 
@@ -19,6 +22,7 @@ function markAllCellsWithPencils(prevGrid: SudokuGridWithPencils): SudokuGridWit
     for (let col = 0; col < 9; col++) {
       const cell = newGrid[row][col];
       if (cell.value !== null) continue; // Skip filled cells
+      if (cell.answer !== null && cell.showAnswer) continue; // Skip cells with answers
       const newCell = markPencilForCell(newGrid, row, col);
       newGrid[row][col] = newCell;
     }
@@ -31,8 +35,8 @@ const markPencilForCell = (grid: SudokuGridWithPencils, row: number, col: number
   if (cell.value !== null) return cell; // Can't add pencil marks to filled cells
 
   const newPencils = new Set<number>([ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]);
-  const rowNumbers = new Set(grid[row].filter((c, cCol) => cCol !== col && c.value !== null).map(c => c.value));
-  const colNumbers = new Set(grid.map(r => r[col]).filter((c, rRow) => rRow !== row && c.value !== null).map(c => c.value));
+  const rowNumbers = getRowNumbers(grid, row);
+  const colNumbers = getColNumbers(grid, col);
   const boxNumbers = getBoxNumbers(grid, row, col);
 
   // remove numbers already in the same row and column
@@ -54,15 +58,49 @@ const getBoxNumbers = (grid: SudokuGridWithPencils, row: number, col: number) =>
 
   for (let r = boxRowStart; r < boxRowStart + 3; r++) {
     for (let c = boxColStart; c < boxColStart + 3; c++) {
-      const cell = grid[r][c];
-      if (cell.value !== null) {
-        numbers.add(cell.value);
+      const cell = getCellValue(grid, r, c);
+      if (cell !== null) {
+        numbers.add(cell);
       }
     }
   }
 
   return numbers;
 };
+
+const getRowNumbers = (grid: SudokuGridWithPencils, row: number): Set<number> => {
+  const numbers = new Set<number>();
+  for (let col = 0; col < 9; col++) {
+    const cellValue = getCellValue(grid, row, col);
+    if (cellValue !== null) {
+      numbers.add(cellValue);
+    }
+  }
+  return numbers;
+};
+
+const getColNumbers = (grid: SudokuGridWithPencils, col: number): Set<number> => {
+  const numbers = new Set<number>();
+  for (let row = 0; row < 9; row++) {
+    const cell = getCellValue(grid, row, col);
+    if (cell !== null) {
+      numbers.add(cell);
+    }
+  }
+  return numbers;
+};
+
+const getCellValue = (grid: SudokuGridWithPencils, row: number, col: number): number | null => {
+  const cell = grid[row][col];
+  if (cell.value !== null) {
+    return cell.value;
+  }
+  if (cell.answer !== null && cell.showAnswer) {
+    return cell.answer;
+  }
+  return null;
+};
+
 
 const convertSinglesToAnswers = (prevGrid: SudokuGridWithPencils): SudokuGridWithPencils => {
   const newGrid = prevGrid.map(gridRow => [...gridRow]);

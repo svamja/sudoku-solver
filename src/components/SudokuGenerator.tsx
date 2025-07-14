@@ -68,10 +68,8 @@ export default function SudokuGenerator() {
 
 
   const solveSudokuStepwise = async () => {
-    setGrid(prevGrid => {
-      const newGrid = stepSolve(stepCount, prevGrid);
-      return newGrid;
-    });
+    const newGrid = stepSolve(stepCount, grid);
+    setGrid(newGrid);
     setStepCount(prevCount => prevCount + 1);
   };
 
