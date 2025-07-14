@@ -15,7 +15,6 @@ import { stepSolve } from '@/lib/solver';
 export default function SudokuGenerator() {
   const [grid, setGrid] = useState<SudokuGridWithPencils>(createEmptyGridWithPencils);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isPencilMode, setIsPencilMode] = useState(false);
   const [stepCount, setStepCount] = useState(1);
 
   const handleGenerate = async () => {
@@ -42,30 +41,8 @@ export default function SudokuGenerator() {
   };
 
   const handleCellClick = (row: number, col: number) => {
-    if (!isPencilMode) return;
-    
-    const cell = grid[row][col];
-    if (cell.value !== null) return; // Can't add pencil marks to filled cells
-    
-    setGrid(prevGrid => {
-      const newGrid = prevGrid.map(gridRow => [...gridRow]);
-      
-      // Show answer "7" when cell is clicked in pencil mode
-      newGrid[row][col] = {
-        ...cell,
-        answer: 7,
-        showAnswer: true,
-        pencils: new Set() // Clear pencil marks when showing answer
-      };
-      
-      return newGrid;
-    });
-  };
-
-  const togglePencilMode = () => {
-    setIsPencilMode(!isPencilMode);
-  };
-
+    console.log(`Cell clicked: Row ${row}, Col ${col}`);
+  }
 
   const solveSudokuStepwise = async () => {
     const newGrid = stepSolve(stepCount, grid);
@@ -88,48 +65,19 @@ export default function SudokuGenerator() {
         <GenerateButton onGenerate={handleGenerate} isGenerating={isGenerating} />
         <button
           onClick={solveSudokuStepwise}
-          className={`
-            px-4 py-2 rounded-lg font-medium transition-colors
-            ${isPencilMode 
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'
-            }
-          `}
+          className='px-4 py-2 rounded-lg font-medium transition-colors
+            bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'
         >
           Solve
-        </button>
-        <button
-          onClick={togglePencilMode}
-          className={`
-            px-4 py-2 rounded-lg font-medium transition-colors
-            ${isPencilMode 
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'
-            }
-          `}
-        >
-          {isPencilMode ? 'Exit Pencil Mode' : 'Pencil Mode'}
         </button>
         <div>{stepCount} </div>
       </div>
       
       <SudokuGrid 
         grid={grid} 
-        isPencilMode={isPencilMode}
+        isPencilMode={false}
         onCellClick={handleCellClick}
       />
-      
-      <div className="text-center text-sm text-gray-500 dark:text-gray-400 max-w-md">
-        <p>
-          Each generated puzzle has a unique solution and follows standard sudoku rules:
-          each row, column, and 3×3 box must contain all digits from 1 to 9.
-        </p>
-        {isPencilMode && (
-          <p className="mt-2 text-blue-600 dark:text-blue-400">
-            In pencil mode, click empty cells to toggle pencil marks (1-9).
-          </p>
-        )}
-      </div>
     </div>
   );
 }

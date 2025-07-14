@@ -2,16 +2,13 @@ import { SudokuGridWithPencils } from '@/types/sudoku';
 
 
 export function stepSolve(stepCount: number, prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
-  if (stepCount == 1) {
+  if (stepCount%2 == 1) {
     // mark everything with pencil marks
     return markAllCellsWithPencils(prevGrid);
   }
-  if (stepCount == 2) {
+  if (stepCount%2 == 0) {
     // remove pencil marks from all cells
     return convertSinglesToAnswers(prevGrid);
-  }
-  if (stepCount == 3) {
-    return markAllCellsWithPencils(prevGrid);
   }
   return prevGrid;
 }
