@@ -2,13 +2,21 @@ import { SudokuGridWithPencils } from '@/types/sudoku';
 
 
 export function stepSolve(stepCount: number, prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
-  if (stepCount%2 == 1) {
+  if (stepCount%4 == 1) {
     // mark everything with pencil marks
     return markAllCellsWithPencils(prevGrid);
   }
-  if (stepCount%2 == 0) {
-    // remove pencil marks from all cells
+  if (stepCount%4 == 2) {
+    // mark single pencil mark as answers
     return convertSinglesToAnswers(prevGrid);
+  }
+  if (stepCount%4 == 3) {
+    // mark everything with pencil marks
+    return markAllCellsWithPencils(prevGrid);
+  }
+  if (stepCount%4 == 0) {
+    // mark single candidates as answers
+    return spotSingleCandidates(prevGrid);
   }
   return prevGrid;
 }
@@ -118,3 +126,62 @@ const convertSinglesToAnswers = (prevGrid: SudokuGridWithPencils): SudokuGridWit
   }
   return newGrid;
 }
+
+
+const spotSingleCandidates = (prevGrid: SudokuGridWithPencils): SudokuGridWithPencils => {
+  const newGrid = prevGrid.map(gridRow => [...gridRow]);
+  for (let row = 0; row < 9; row += 3) {
+    for (let col = 0; col < 9; col += 3) {
+      const cells = getBoxCells(newGrid, row, col);
+      spotAndMarkSingleCandidates(cells, newGrid, row, col);
+    }
+  }
+  return newGrid;
+};
+
+const spotAndMarkSingleCandidates = (cells: SudokuGridWithPencils, grid: SudokuGridWithPencils, startRow: number, startCol: number) => {
+  console.log(startRow, startCol, cells);
+  const candidatesCount: Record<number, number> = {};
+  const cellPositions: Record<number, { row: number, col: number }> = {};
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      const cell = cells[r][c];
+      if (cell.value !== null || cell.showAnswer) continue; // Skip filled or answered cells
+      for (const pencil of cell.pencils) {
+        if (!candidatesCount[pencil]) {
+          candidatesCount[pencil] = 0;
+          cellPositions[pencil] = { row: -1, col: -1 };
+        }
+        candidatesCount[pencil]++;
+        cellPositions[pencil] = { row: startRow + r, col: startCol + c };
+      }
+    }
+  }
+
+  // Check for single candidates
+  for (const pencil in candidatesCount) {
+    if (candidatesCount[pencil] === 1) {
+      const pos = cellPositions[Number(pencil)];
+      const cell = grid[pos.row][pos.col];
+      grid[pos.row][pos.col] = {
+        ...cell,
+        answer: Number(pencil),
+        pencils: new Set(),
+        showAnswer: true
+      };
+    }
+  }
+
+};
+
+const getBoxCells = (grid: SudokuGridWithPencils, startRow: number, startCol: number): SudokuGridWithPencils => {
+  const cells: SudokuGridWithPencils = [];
+  for (let r = startRow; r < startRow + 3; r++) {
+    const rowCells = [];
+    for (let c = startCol; c < startCol + 3; c++) {
+      rowCells.push(grid[r][c]);
+    }
+    cells.push(rowCells);
+  }
+  return cells;
+};

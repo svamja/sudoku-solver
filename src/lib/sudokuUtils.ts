@@ -245,3 +245,22 @@ export function toggleAnswerDisplay(cell: SudokuCellWithPencils): SudokuCellWith
     showAnswer: !cell.showAnswer
   };
 }
+
+export function importSudoku(sudokuString): SudokuGrid {
+  if (sudokuString.length !== 81) {
+    throw new Error('Invalid Sudoku string length. Must be 81 characters.');
+  }
+
+  const grid: SudokuGrid = createEmptyGrid();
+  
+  for (let i = 0; i < 81; i++) {
+    const value = parseInt(sudokuString[i], 10);
+    if (value >= 0 && value <= 9) {
+      grid[Math.floor(i / 9)][i % 9] = value === 0 ? null : value;
+    } else {
+      throw new Error(`Invalid character at position ${i}: ${sudokuString[i]}`);
+    }
+  }
+  
+  return grid;
+}
