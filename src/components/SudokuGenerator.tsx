@@ -64,7 +64,7 @@ export default function SudokuGenerator() {
     <div className="flex flex-col items-center gap-8 p-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          Sudoku Generator
+          Sudoku Step Solver
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400">
           Click the button below to generate a new sudoku puzzle
