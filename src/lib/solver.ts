@@ -2,19 +2,19 @@ import { SudokuGridWithPencils } from '@/types/sudoku';
 
 
 export function stepSolve(stepCount: number, prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
-  if (stepCount%4 == 1) {
+  if (stepCount%4 == 0) {
     // mark everything with pencil marks
     return markAllCellsWithPencils(prevGrid);
   }
-  if (stepCount%4 == 2) {
+  if (stepCount%4 == 1) {
     // mark single pencil mark as answers
     return convertSinglesToAnswers(prevGrid);
   }
-  if (stepCount%4 == 3) {
+  if (stepCount%4 == 2) {
     // mark everything with pencil marks
     return markAllCellsWithPencils(prevGrid);
   }
-  if (stepCount%4 == 0) {
+  if (stepCount%4 == 3) {
     // mark single candidates as answers
     return spotSingleCandidates(prevGrid);
   }

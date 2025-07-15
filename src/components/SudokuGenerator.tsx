@@ -11,17 +11,16 @@ import {
   createEmptyGrid
 } from '@/lib/sudokuUtils';
 import SudokuGrid from './SudokuGrid';
-import GenerateButton from './GenerateButton';
 import { stepSolve } from '@/lib/solver';
 
 export default function SudokuGenerator() {
   const [grid, setGrid] = useState<SudokuGridWithPencils>(createEmptyGridWithPencils);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [stepCount, setStepCount] = useState(1);
+  const [description, setDescription] = useState('Click "Generate" to create a new puzzle');
 
   const handleGenerate = async () => {
-    setIsGenerating(true);
-    setStepCount(1);
+    setStepCount(-1);
+    setDescription(getDescription(-1));
     // Add a small delay to show the loading state
     await new Promise(resolve => setTimeout(resolve, 100));
     
@@ -38,7 +37,6 @@ export default function SudokuGenerator() {
       // Fallback to empty grid if generation fails
       setGrid(createEmptyGridWithPencils());
     } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -55,13 +53,43 @@ export default function SudokuGenerator() {
   }
 
   const solveSudokuStepwise = async () => {
-    const newGrid = stepSolve(stepCount, grid);
+    const prevCount = stepCount;
+    setStepCount(stepCount + 1);
+    const newGrid = stepSolve(prevCount + 1, grid);
     setGrid(newGrid);
-    setStepCount(prevCount => prevCount + 1);
+    setDescription(getDescription(prevCount + 1));
+    verifyGridSolved(newGrid);
+  };
+
+  const verifyGridSolved = (grid: SudokuGridWithPencils) => {
+    // Check if the grid is completely filled with answers
+    const isSolved = grid.every(row => 
+      row.every(cell => cell.value !== null || cell.showAnswer)
+    );
+    
+    if (isSolved) {
+      setDescription('Sudoku puzzle solved!');
+    }
+  };
+
+  const getDescription = (step: number) => {
+    switch (step % 4) {
+      case -1:
+        return 'New puzzle generated';
+      case 0:
+      case 2:
+        return 'Updated pencils';
+      case 1:
+        return 'Marked single pencil marks as answers';
+      case 3:
+        return 'Applied single candidates in a box';
+      default:
+        return `Step ${step}`;
+    }
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 p-8">
+    <div className="flex flex-col items-center gap-4 p-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">
           Sudoku Step Solver
@@ -72,7 +100,13 @@ export default function SudokuGenerator() {
       </div>
       
       <div className="flex gap-4 items-center">
-        <GenerateButton onGenerate={handleGenerate} isGenerating={isGenerating} />
+        <button
+          onClick={handleGenerate}
+          className='px-4 py-2 rounded-lg font-medium transition-colors
+            bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'
+        >
+          Generate
+        </button>
         <button
           onClick={handleImport}
           className='px-4 py-2 rounded-lg font-medium transition-colors
@@ -87,9 +121,12 @@ export default function SudokuGenerator() {
         >
           Solve
         </button>
-        <div>{stepCount} </div>
       </div>
       
+      <div className="flex gap-2 items-center">
+        <h3>{description}</h3>
+      </div>
+
       <SudokuGrid 
         grid={grid} 
         isPencilMode={false}
