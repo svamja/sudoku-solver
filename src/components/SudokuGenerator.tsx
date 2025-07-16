@@ -41,6 +41,8 @@ export default function SudokuGenerator() {
   };
 
   const handleImport = async () => {
+    setStepCount(-1);
+    setDescription(getDescription(-1));
     const sudokuString = '000100304010000600405070080020089001860014709000002003000800000002050010000900200';
     const grid = importSudoku(sudokuString);
     const emptySolution = createEmptyGrid();
@@ -73,16 +75,22 @@ export default function SudokuGenerator() {
   };
 
   const getDescription = (step: number) => {
+    const showCount = step + 1
     switch (step % 4) {
       case -1:
         return 'New puzzle generated';
       case 0:
-      case 2:
-        return 'Updated pencils';
+        return `Step #${showCount} - Updated pencils`;
       case 1:
-        return 'Marked single pencil marks as answers';
+        return `Step #${showCount} - Strike out using pencil pairs`;
+      case 2:
+        return `Step #${showCount} - Marked single pencil marks as answers`;
       case 3:
-        return 'Applied single candidates in a box';
+        return `Step #${showCount} - Updated pencils`;
+      case 4:
+        return `Step #${showCount} - Strike out using pencil pairs`;
+      case 5:
+        return `Step #${showCount} - Applied single candidates in a box`;
       default:
         return `Step ${step}`;
     }

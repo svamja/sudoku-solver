@@ -1,20 +1,21 @@
-import { SudokuGridWithPencils } from '@/types/sudoku';
+import { SudokuCellWithPencils, SudokuGridWithPencils } from '@/types/sudoku';
 
 
 export function stepSolve(stepCount: number, prevGrid: SudokuGridWithPencils): SudokuGridWithPencils {
-  if (stepCount%4 == 0) {
+  const CYCLE_SIZE = 6;
+  if (stepCount%CYCLE_SIZE == 0 || stepCount%CYCLE_SIZE == 3) {
     // mark everything with pencil marks
     return markAllCellsWithPencils(prevGrid);
   }
-  if (stepCount%4 == 1) {
+  if (stepCount%CYCLE_SIZE == 1 || stepCount%CYCLE_SIZE == 4) {
+    // strike out pencil marks using pairs
+    return strikePencilsUsingPairs(prevGrid);
+  }
+  if (stepCount%CYCLE_SIZE == 2) {
     // mark single pencil mark as answers
     return convertSinglesToAnswers(prevGrid);
   }
-  if (stepCount%4 == 2) {
-    // mark everything with pencil marks
-    return markAllCellsWithPencils(prevGrid);
-  }
-  if (stepCount%4 == 3) {
+  if (stepCount%CYCLE_SIZE == 5) {
     // mark single candidates as answers
     return spotSingleCandidates(prevGrid);
   }
@@ -185,3 +186,56 @@ const getBoxCells = (grid: SudokuGridWithPencils, startRow: number, startCol: nu
   }
   return cells;
 };
+
+const strikePencilsUsingPairs = (prevGrid: SudokuGridWithPencils): SudokuGridWithPencils => {
+  const newGrid = prevGrid.map(gridRow => [...gridRow]);
+  for (let row = 0; row < 9; row++) {
+    // create map of pairs
+    const cells = getRowCells(newGrid, row);
+    const pencilPairs = getPencilPairs(cells);
+    for (const [pencils] of Object.entries(pencilPairs)) {
+      const [pencil1, pencil2] = pencils.split(',').map(Number);
+      // Remove these pencils from all other cells in the row
+      for (let col = 0; col < 9; col++) {
+        const cell = newGrid[row][col];
+        if (cell.value !== null || cell.showAnswer) continue; // Skip filled or answered cells
+        // if the cell has exactly 2 pencils and they match the pair, skip it
+        if (cell.pencils.size === 2 && cell.pencils.has(pencil1) && cell.pencils.has(pencil2)) {
+          continue;
+        }
+        if (cell.pencils.has(pencil1)) {
+          cell.pencils.delete(pencil1);
+        }
+        if (cell.pencils.has(pencil2)) {
+          cell.pencils.delete(pencil2);
+        }
+      }
+    }
+  }
+
+  return newGrid;
+};
+
+const getRowCells = (grid: SudokuGridWithPencils, row: number): SudokuCellWithPencils[] => {
+  return grid[row]
+};
+
+const getPencilPairs = (cells: SudokuCellWithPencils[]): Record<string, number> => {
+  const pencilPairs: Record<string, number> = {};
+  for (const cell of cells) {
+    if (cell.value !== null || cell.showAnswer) continue; // Skip filled or answered cells
+    if (cell.pencils.size !== 2) continue; // Only consider cells with 2 pencils
+    const pencils = Array.from(cell.pencils).sort().join(',');
+    if (!pencilPairs[pencils]) {
+      pencilPairs[pencils] = 0;
+    }
+    pencilPairs[pencils]++;
+  }
+  // Filter out pairs that have more than 2 occurrences
+  for (const pencil in pencilPairs) {
+    if (pencilPairs[pencil] !== 2) {
+      delete pencilPairs[pencil];
+    }
+  }
+  return pencilPairs;
+};  
